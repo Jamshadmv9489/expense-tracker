@@ -4,6 +4,7 @@ import cors from 'cors'
 import morgan from 'morgan';
 
 import connectDB from "./config/db.js";
+import authRoutes from './routes/authRoutes.js'
 
 // Load environment variables from .env file (like PORT, Mongo URI)
 dotenv.config();
@@ -25,8 +26,10 @@ app.use(express.json());
 // Middleware: Logs every request to the console (shows method, URL, and status)
 app.use(morgan('dev'));
 
+app.use("/auth", authRoutes);
+
 // Simple route to check if the API is working
-app.get("/hello", (req, res) => {
+app.get("/", (req, res) => {
   res.send("API running...");
 });
 
