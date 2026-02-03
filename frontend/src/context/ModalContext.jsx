@@ -11,20 +11,25 @@ export const ModalProvider = ({ children }) => {
         open: false,
         status: "success",
         title: "",
-        message: ""
+        message: "",
+        onClose: null
     });
 
-    const showModal = ({ status = "success", title, message }) => {
+    const showModal = ({ status = "success", title, message, onClose = null }) => {
         setModal({
             open: true,
             status,
             title,
-            message
+            message,
+            onClose
         });
     };
 
     const closeModal = () => {
-        setModal(prev => ({ ...prev, open: false }));
+        if (modal.onClose) {
+            modal.onClose();
+        }
+        setModal(prev => ({ ...prev, open: false, onClose: null }));
     };
 
     return (
