@@ -74,18 +74,18 @@ export const forgotValidation = (values) => {
 // Reset Password Validation
 export const resetValidation = (values) => {
   const errors = {};
-  const password = values.password?.trim();
+  const newPassword = values.newPassword?.trim();
   const confirmPassword = values.confirmPassword?.trim();
 
-  if (!password) {
-    errors.password = "Password is required";
-  } else if (password.length < 6) {
-    errors.password = "Password must be at least 6 characters";
+  if (!newPassword) {
+    errors.newPassword = "Password is required";
+  } else if (newPassword.length < 6) {
+    errors.newPassword = "Password must be at least 6 characters";
   }
 
   if (!confirmPassword) {
     errors.confirmPassword = "Confirm your password";
-  } else if (confirmPassword !== password) {
+  } else if (confirmPassword !== newPassword) {
     errors.confirmPassword = "Passwords do not match";
   }
 
