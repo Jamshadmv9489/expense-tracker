@@ -1,58 +1,82 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useForm } from "../hooks/useForm";
 import { resetValidation } from "../validations/authValidation";
+import { resetPassword } from "../services/authServices";
 
 import AuthLayout from "../components/auth/AuthLayout";
 import AuthInput from "../components/auth/AuthInput";
 import AuthButton from "../components/auth/AuthButton";
 
-import { useGlobalLoader } from "../context/LoaderContext";
 import { useModal } from "../context/ModalContext";
 
 const ResetPassword = () => {
-  const { token } = useParams();
+  
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const navigate = useNavigate();
-
-  const { withLoader } = useGlobalLoader();
   const { showModal } = useModal();
+
+  useEffect(() => {
+    if (!token) {
+      showModal({
+        status: "error",
+        title: "Invalid Link",
+        message: "Reset token is missing. Redirecting to login...",
+        onclose: () => navigate('/login'),
+      });
+    }
+  }, [token, navigate, showModal]);
 
   const form = useForm({
     initialValues: {
-      password: "",
+      newPassword: "",
       confirmPassword: "",
     },
     validate: resetValidation,
   });
 
-  const onReset = async (values) => {
-    await withLoader(async () => {
-      try {
+  const onReset = async (formData) => {
 
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (!token) return;
 
+    try {
+      const data = {
+        token: token,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      };
+
+      await resetPassword(data);
+
+      showModal({
+        status: "success",
+        title: "Success!",
+        message: "Your password has been updated. Redirecting to login...",
+        onClose: () => navigate('/login'),
+      });
+
+      form.resetForm();
+
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Something went wrong.";
+
+      if (errorMessage.includes("invalid") || errorMessage.includes("expired")) {
         showModal({
-          status: "success",
-          title: "Password Reset Successful",
-          message: "You can now login with your new password.",
+          status: "error",
+          title: "Link Expired",
+          message: "This reset link is no longer valid. Please request a new one.",
+          onClose: () => navigate('/forgot-password'),
         });
-
-        form.resetForm();
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
-
-      } catch (err) {
-
+      } else {
         showModal({
           status: "error",
           title: "Reset Failed",
-          message: err?.message || "Something went wrong.",
+          message: errorMessage,
         });
-
       }
-    });
+    }
   };
 
   return (
@@ -61,15 +85,14 @@ const ResetPassword = () => {
       subtitle="Enter a new password for your account"
     >
       <form onSubmit={form.handleSubmit(onReset)} noValidate>
-
         <AuthInput
           label="New Password"
           type="password"
-          name="password"
+          name="newPassword"
           autoComplete="new-password"
-          value={form.values.password}
+          value={form.values.newPassword}
           onChange={form.handleChange}
-          error={form.errors.password}
+          error={form.errors.newPassword}
           placeholder="••••••••"
         />
 
@@ -90,7 +113,6 @@ const ResetPassword = () => {
         >
           Reset Password
         </AuthButton>
-
       </form>
     </AuthLayout>
   );

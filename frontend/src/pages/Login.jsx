@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useForm } from "../hooks/useForm";
 import { loginValidation } from "../validations/authValidation";
@@ -7,9 +7,11 @@ import AuthLayout from "../components/auth/AuthLayout";
 import AuthInput from "../components/auth/AuthInput";
 import AuthButton from "../components/auth/AuthButton";
 import { useModal } from "../context/ModalContext";
+import { loginUser } from "../services/authServices";
 
 export default function Login() {
 
+    const navigate = useNavigate();
     const { showModal } = useModal();
 
     const form = useForm({
@@ -20,22 +22,41 @@ export default function Login() {
     const onLogin = async (formData) => {
         try {
 
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            await loginUser(formData);
 
             showModal({
                 status: "success",
                 title: "Login Successful",
-                message: "Redirecting to dashboard..."
+                message: "Redirecting to dashboard...",
+                onClose: () => navigate('/home')
             });
 
             form.resetForm();
 
         } catch (error) {
 
+            const serverMsg = error?.response?.data?.message;
+            let finalMsg = "Something went wrong. Please try again.";
+
+            if (error.response?.status === 401) {
+                finalMsg = "Invalid email or password. Please check your credentials.";
+            } else if (error.response?.status === 404) {
+                finalMsg = "Account not found. Please register first.";
+            } else if (error.response.status === 400) {
+                finalMsg = error.response.data?.message || "Invalid input data.";
+            } else if (serverMsg) {
+                finalMsg = serverMsg;
+            } else if (error.request) {
+                finalMsg = "Network error. Please check your internet connection.";
+            } else {
+                finalMsg = error.message;
+            }
+
+
             showModal({
                 status: "error",
                 title: "Login Failed",
-                message: "The provided credentials are incorrect."
+                message: finalMsg
             });
 
         }
@@ -43,7 +64,7 @@ export default function Login() {
 
     return (
         <AuthLayout
-            title="Welcome Back 👋"
+            title="Welcome Back"
             subtitle="Sign in to continue to your account."
         >
             <form onSubmit={form.handleSubmit(onLogin)} noValidate>

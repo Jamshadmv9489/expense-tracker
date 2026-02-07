@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { useForm } from '../hooks/useForm'
 import { registerValidation } from '../validations/authValidation'
@@ -7,10 +7,12 @@ import AuthLayout from '../components/auth/AuthLayout'
 import AuthInput from '../components/auth/AuthInput'
 import AuthButton from '../components/auth/AuthButton'
 import { useModal } from '../context/ModalContext'
+import { registerUser } from '../services/authServices'
 
 const Register = () => {
 
     const { showModal } = useModal();
+    const navigate = useNavigate();
 
     const form = useForm({
         initialValues: {
@@ -24,22 +26,34 @@ const Register = () => {
     const onRegister = async (formData) => {
         try {
 
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            const { data } = await registerUser(formData);
+            console.log(data);
 
             showModal({
                 status: "success",
                 title: "Account Created 🎉",
-                message: "Your account has been created successfully."
+                message: "Your account has been created successfully.",
+                onClose: () => navigate('/login')
             });
 
             form.resetForm();
 
+
         } catch (error) {
+            const serverMsg = error?.response?.data?.message;
+
+            let finalMsg = "Something went wrong. Please try again.";
+
+            if (serverMsg?.toLowerCase().includes("email")) {
+                finalMsg = "This email is already registered. Please use another one.";
+            } else if (serverMsg) {
+                finalMsg = serverMsg;
+            }
 
             showModal({
                 status: "error",
                 title: "Registration Failed",
-                message: "Something went wrong. Please try again."
+                message: finalMsg
             });
 
         }

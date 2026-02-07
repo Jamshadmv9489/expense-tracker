@@ -1,11 +1,13 @@
+import { Link } from 'react-router-dom'
+
 import { useForm } from '../hooks/useForm'
 import { forgotValidation } from '../validations/authValidation'
+import { forgotPassword } from '../services/authServices'
 
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthInput from '../components/auth/AuthInput'
 import AuthButton from '../components/auth/AuthButton'
 import { useModal } from '../context/ModalContext'
-import { Link } from 'react-router-dom'
 
 const ForgotPassword = () => {
 
@@ -19,7 +21,7 @@ const ForgotPassword = () => {
     const onForgot = async (formData) => {
         try {
 
-            await new Promise((resolve) => setTimeout(resolve, 3000));
+            await forgotPassword(formData);
 
             showModal({
                 status: "success",
@@ -30,6 +32,7 @@ const ForgotPassword = () => {
             form.resetForm();
 
         } catch (error) {
+console.log(error);
 
             showModal({
                 status: "error",
